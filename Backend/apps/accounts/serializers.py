@@ -2,6 +2,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth.tokens import default_token_generator
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from .tokens import decode_user_id, email_verification_token_generator
 
 from .models import Address
 
@@ -29,6 +34,10 @@ class UserSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+class TokenPairSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+    access = serializers.CharField()
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -82,12 +91,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         return User.objects.create_user(password=password, **validated_data)
 
 
-class TokenPairSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
-    access = serializers.CharField()
-
 
 class RegisterResponseSerializer(serializers.Serializer):
+    detail = serializers.CharField()
     user = UserSerializer()
     tokens = TokenPairSerializer()
 
@@ -140,3 +146,124 @@ class AddressSerializer(serializers.ModelSerializer):
                 attrs[field] = attrs[field].strip()
 
         return attrs
+    
+
+
+# After Import 
+
+class DetailResponseSerializer(serializers.Serializer):
+    detail = serializers.CharField()
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        try:
+            attrs["token"] = RefreshToken(attrs["refresh"])
+        except TokenError:
+            raise serializers.ValidationError(
+                {"refresh": "Invalid or expired refresh token."}
+            )
+
+        return attrs
+
+    def save(self, **kwargs):
+        self.validated_data["token"].blacklist()
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    new_password_confirm = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_old_password(self, value):
+        user = self.context["request"].user
+
+        if not user.check_password(value):
+            raise serializers.ValidationError("Old password is incorrect.")
+
+        return value
+
+    def validate(self, attrs):
+        new_password = attrs.get("new_password")
+        confirm_password = attrs.pop("new_password_confirm", None)
+
+        if new_password != confirm_password:
+            raise serializers.ValidationError(
+                {"new_password_confirm": "Passwords do not match."}
+            )
+
+        validate_password(new_password, self.context["request"].user)
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.context["request"].user
+        user.set_password(self.validated_data["new_password"])
+        user.save(update_fields=["password", "updated_at"])
+        return user
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        return value.strip().lower()
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    uid = serializers.CharField(write_only=True)
+    token = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    new_password_confirm = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, attrs):
+        user = decode_user_id(attrs.get("uid"))
+        token = attrs.get("token")
+
+        if not user or not default_token_generator.check_token(user, token):
+            raise serializers.ValidationError(
+                {"token": "Invalid or expired password reset token."}
+            )
+
+        new_password = attrs.get("new_password")
+        confirm_password = attrs.pop("new_password_confirm", None)
+
+        if new_password != confirm_password:
+            raise serializers.ValidationError(
+                {"new_password_confirm": "Passwords do not match."}
+            )
+
+        validate_password(new_password, user)
+
+        attrs["user"] = user
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.validated_data["user"]
+        user.set_password(self.validated_data["new_password"])
+        user.save(update_fields=["password", "updated_at"])
+        return user
+
+
+class VerifyEmailSerializer(serializers.Serializer):
+    uid = serializers.CharField(write_only=True)
+    token = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        user = decode_user_id(attrs.get("uid"))
+        token = attrs.get("token")
+
+        if not user or not email_verification_token_generator.check_token(user, token):
+            raise serializers.ValidationError(
+                {"token": "Invalid or expired email verification token."}
+            )
+
+        attrs["user"] = user
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.validated_data["user"]
+        user.is_verified = True
+        user.save(update_fields=["is_verified", "updated_at"])
+        return user

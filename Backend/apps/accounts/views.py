@@ -7,6 +7,8 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth import get_user_model
+from django.db import transaction
 
 from .models import Address
 from .serializers import (
@@ -16,8 +18,23 @@ from .serializers import (
     RegisterResponseSerializer,
     RegisterSerializer,
     UserSerializer,
+
+    ChangePasswordSerializer,
+    DetailResponseSerializer,
+    ForgotPasswordSerializer,
+    LogoutSerializer,
+    ResetPasswordSerializer,
+    VerifyEmailSerializer,
 )
 
+from .tasks import (
+    send_email_verification_task,
+    send_password_changed_email_task,
+    send_password_reset_email_task,
+    send_welcome_email_task,
+)
+
+User = get_user_model()
 
 @extend_schema(
     tags=["Accounts"],
@@ -43,7 +60,12 @@ class RegisterView(generics.CreateAPIView):
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
 
+        transaction.on_commit(
+            lambda: send_email_verification_task.delay(str(user.id))
+        )
+
         response_data = {
+            "detail": "Account created successfully. Please verify your email.",
             "user": UserSerializer(user).data,
             "tokens": {
                 "refresh": str(refresh),
@@ -128,3 +150,158 @@ class AddressViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(user=self.request.user)
+
+
+# New Views 
+
+@extend_schema(
+    tags=["Accounts"],
+    request=LogoutSerializer,
+    responses={200: DetailResponseSerializer},
+    summary="Logout user",
+    description="Blacklists the refresh token. Access token will expire naturally.",
+)
+class LogoutView(generics.GenericAPIView):
+    serializer_class = LogoutSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            {"detail": "Logged out successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+
+@extend_schema(
+    tags=["Accounts"],
+    request=ChangePasswordSerializer,
+    responses={200: DetailResponseSerializer},
+    summary="Change authenticated user's password",
+    description=(
+        "Requires old password. Password update happens synchronously. "
+        "Notification email is sent asynchronously through Celery."
+    ),
+)
+class ChangePasswordView(generics.GenericAPIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.save()
+
+        transaction.on_commit(
+            lambda: send_password_changed_email_task.delay(str(user.id))
+        )
+
+        return Response(
+            {"detail": "Password changed successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+
+@extend_schema(
+    tags=["Accounts"],
+    request=ForgotPasswordSerializer,
+    responses={200: DetailResponseSerializer},
+    summary="Request password reset email",
+    description=(
+        "Always returns the same response to prevent email enumeration. "
+        "If the user exists, password reset email is queued through Celery."
+    ),
+)
+class ForgotPasswordView(generics.GenericAPIView):
+    serializer_class = ForgotPasswordSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"]
+
+        user = User.objects.filter(
+            email__iexact=email,
+            is_active=True,
+        ).first()
+
+        if user:
+            transaction.on_commit(
+                lambda: send_password_reset_email_task.delay(str(user.id))
+            )
+
+        return Response(
+            {
+                "detail": (
+                    "If an account exists with this email, "
+                    "a password reset link has been sent."
+                )
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@extend_schema(
+    tags=["Accounts"],
+    request=ResetPasswordSerializer,
+    responses={200: DetailResponseSerializer},
+    summary="Reset password using token",
+    description=(
+        "Resets password using uid and token from password reset email. "
+        "Password changed notification is queued through Celery."
+    ),
+)
+class ResetPasswordView(generics.GenericAPIView):
+    serializer_class = ResetPasswordSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.save()
+
+        transaction.on_commit(
+            lambda: send_password_changed_email_task.delay(str(user.id))
+        )
+
+        return Response(
+            {"detail": "Password reset successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+
+@extend_schema(
+    tags=["Accounts"],
+    request=VerifyEmailSerializer,
+    responses={200: DetailResponseSerializer},
+    summary="Verify email address",
+    description=(
+        "Verifies user email using uid and token. "
+        "Welcome email is queued through Celery after successful verification."
+    ),
+)
+class VerifyEmailView(generics.GenericAPIView):
+    serializer_class = VerifyEmailSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.save()
+
+        transaction.on_commit(
+            lambda: send_welcome_email_task.delay(str(user.id))
+        )
+
+        return Response(
+            {"detail": "Email verified successfully."},
+            status=status.HTTP_200_OK,
+        )

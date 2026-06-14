@@ -164,3 +164,41 @@ MEDIA_ROOT  = BASE_DIR / 'media'
 
 # ─── Misc ─────────────────────────────────────────────────────────────────────
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.smtp.EmailBackend",
+)
+
+EMAIL_HOST = config("EMAIL_HOST", default="")
+EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+
+DEFAULT_FROM_EMAIL = config(
+    "DEFAULT_FROM_EMAIL",
+    default="MarketHub <noreply@markethub.local>",
+)
+
+FRONTEND_URL = config(
+    "FRONTEND_URL",
+    default="http://localhost:3000",
+).rstrip("/")
+
+VERIFY_EMAIL_PATH = config(
+    "VERIFY_EMAIL_PATH",
+    default="/verify-email",
+)
+
+RESET_PASSWORD_PATH = config(
+    "RESET_PASSWORD_PATH",
+    default="/reset-password",
+)
+
+PASSWORD_RESET_TIMEOUT = config(
+    "PASSWORD_RESET_TIMEOUT",
+    default=3600,
+    cast=int,
+)
