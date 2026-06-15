@@ -1,4 +1,8 @@
 from .base import *
+from decouple import config
+from dotenv import load_dotenv
+
+load_dotenv(BASE_DIR / ".env")
 
 DEBUG = True
 
@@ -13,7 +17,12 @@ INSTALLED_APPS += []
 # INTERNAL_IPS = ['127.0.0.1']
 
 # ─── Email — print to console in dev ─────────────────────────────────────────
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.smtp.EmailBackend",
+)
 
 # ─── CORS — allow all in dev ──────────────────────────────────────────────────
 CORS_ALLOW_ALL_ORIGINS = True
