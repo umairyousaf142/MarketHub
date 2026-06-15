@@ -11,6 +11,7 @@ from .views import (
     LogoutView,
     MeView,
     RegisterView,
+    ResendVerificationEmailView,
     ResetPasswordView,
     VerifyEmailView,
 )
@@ -21,6 +22,7 @@ router.register("addresses", AddressViewSet, basename="addresses")
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="accounts-register"),
     path("login/", LoginView.as_view(), name="accounts-login"),
+    path("logout/", LogoutView.as_view(), name="accounts-logout"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path("token/verify/", TokenVerifyView.as_view(), name="token-verify"),
     path("me/", MeView.as_view(), name="accounts-me"),
@@ -43,6 +45,11 @@ urlpatterns = [
         "verify-email/",
         VerifyEmailView.as_view(),
         name="accounts-verify-email",
+    ),
+    path(
+    "resend-verification-email/",
+    ResendVerificationEmailView.as_view(),
+    name="accounts-resend-verification-email",
     ),
     path("", include(router.urls)),
 ]

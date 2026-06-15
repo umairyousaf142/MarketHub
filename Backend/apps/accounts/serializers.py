@@ -89,6 +89,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop("password")
         return User.objects.create_user(password=password, **validated_data)
+    
+class ResendVerificationEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        return value.strip().lower()
 
 
 
@@ -267,3 +273,4 @@ class VerifyEmailSerializer(serializers.Serializer):
         user.is_verified = True
         user.save(update_fields=["is_verified", "updated_at"])
         return user
+    

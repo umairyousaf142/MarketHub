@@ -25,6 +25,7 @@ from .serializers import (
     LogoutSerializer,
     ResetPasswordSerializer,
     VerifyEmailSerializer,
+    ResendVerificationEmailSerializer
 )
 
 from .tasks import (
@@ -74,6 +75,7 @@ class RegisterView(generics.CreateAPIView):
         }
 
         return Response(response_data, status=status.HTTP_201_CREATED)
+    
 
 
 @extend_schema(
@@ -303,5 +305,46 @@ class VerifyEmailView(generics.GenericAPIView):
 
         return Response(
             {"detail": "Email verified successfully."},
+            status=status.HTTP_200_OK,
+        )
+    
+@extend_schema(
+    tags=["Accounts"],
+    request=ResendVerificationEmailSerializer,
+    responses={200: DetailResponseSerializer},
+    summary="Resend email verification link",
+    description=(
+        "Queues a new email verification link for an active unverified account. "
+        "Always returns the same response to prevent email enumeration."
+    ),
+)
+class ResendVerificationEmailView(generics.GenericAPIView):
+    serializer_class = ResendVerificationEmailSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"]
+
+        user = User.objects.filter(
+            email__iexact=email,
+            is_active=True,
+            is_verified=False,
+        ).first()
+
+        if user:
+            transaction.on_commit(
+                lambda: send_email_verification_task.delay(str(user.id))
+            )
+
+        return Response(
+            {
+                "detail": (
+                    "If an unverified account exists with this email, "
+                    "a verification link has been sent."
+                )
+            },
             status=status.HTTP_200_OK,
         )
