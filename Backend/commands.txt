@@ -8,3 +8,6 @@ Test Commands.
 
 pytest apps/accounts/tests -q
 pytest
+
+
+py.exe manage.py startapp accounts apps/accounts
