@@ -10,4 +10,4 @@ pytest apps/accounts/tests -q
 pytest
 
 
-py.exe manage.py startapp accounts apps/accounts
+py.exe manage.py startapp catalog apps/catalog
