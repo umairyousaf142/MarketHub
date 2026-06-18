@@ -19,7 +19,7 @@ urlpatterns = [
     path(f'{API_PREFIX}/auth/',          include('apps.accounts.urls')),
     path(f'{API_PREFIX}/vendors/',       include('apps.vendors.urls')),
     path(f'{API_PREFIX}/catalog/',       include('apps.catalog.urls')),
-    # path(f'{API_PREFIX}/inventory/',     include('apps.inventory.urls')),
+    path(f'{API_PREFIX}/inventory/',     include('apps.inventory.urls')),
     # path(f'{API_PREFIX}/cart/',          include('apps.cart.urls')),
     # path(f'{API_PREFIX}/orders/',        include('apps.orders.urls')),
     # path(f'{API_PREFIX}/payments/',      include('apps.payments.urls')),
