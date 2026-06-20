@@ -36,8 +36,15 @@ LOCAL_APPS = [
     'apps.vendors',
     'apps.catalog',
     'apps.inventory',
-    'apps.cart'
+    'apps.cart',
+    'apps.orders',
+    'apps.payments'
 ]
+
+# ─── Payment Currency ───────────────────────────────────────────────────────────────
+MARKETHUB_DEFAULT_CURRENCY = "USD"
+MARKETHUB_DEFAULT_CURRENCY = "PKR"
+
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 

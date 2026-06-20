@@ -10,4 +10,4 @@ pytest apps/accounts/tests -q
 pytest
 
 
-py.exe manage.py startapp cart apps/cart
+py.exe manage.py startapp payments apps/payments

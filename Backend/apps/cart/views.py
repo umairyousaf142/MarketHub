@@ -48,6 +48,7 @@ def get_or_create_active_cart_for_customer(user):
     ),
 )
 class CustomerCartViewSet(viewsets.ViewSet):
+    serializer_class = CartReadSerializer
     permission_classes = [
         permissions.IsAuthenticated,
         IsCustomer,

@@ -21,6 +21,8 @@ logs/
 
 # Environment variables — NEVER commit these
 .env
+MyNotes.txt
+schema.yml
 
 # IDE
 .vscode/
