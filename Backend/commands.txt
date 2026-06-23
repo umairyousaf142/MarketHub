@@ -10,4 +10,4 @@ pytest apps/accounts/tests -q
 pytest
 
 
-py.exe manage.py startapp payments apps/payments
+py.exe manage.py startapp notifications apps/notifications

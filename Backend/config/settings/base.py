@@ -38,7 +38,10 @@ LOCAL_APPS = [
     'apps.inventory',
     'apps.cart',
     'apps.orders',
-    'apps.payments'
+    'apps.payments',
+    'apps.coupons',
+    'apps.reviews',
+    'apps.notifications'
 ]
 
 # ─── Payment Currency ───────────────────────────────────────────────────────────────

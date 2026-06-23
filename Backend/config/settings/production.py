@@ -1,6 +1,18 @@
 from .base import *
-
+import os
 DEBUG = False
+
+REDIS_CACHE_URL = os.getenv(
+    "REDIS_CACHE_URL",
+    os.getenv("REDIS_URL", "redis://redis:6379/1"),
+)
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": REDIS_CACHE_URL,
+    }
+}
 
 # ─── Security headers ─────────────────────────────────────────────────────────
 SECURE_BROWSER_XSS_FILTER        = True
