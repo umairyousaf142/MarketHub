@@ -26,7 +26,7 @@ urlpatterns = [
     path(f'{API_PREFIX}/coupons/',       include('apps.coupons.urls')),
     path(f'{API_PREFIX}/reviews/',       include('apps.reviews.urls')),
     # path(f'{API_PREFIX}/notifications/', include('apps.notifications.urls')),
-    # path(f'{API_PREFIX}/analytics/',     include('apps.analytics.urls')),
+    path(f'{API_PREFIX}/analytics/',     include('apps.analytics.urls')),
 
 
     # ── API Documentation ────────────────────────────────────────────────────

@@ -3,6 +3,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from decouple import config
 from datetime import timedelta
+from celery.schedules import crontab
 
 # ─── Paths ───────────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -41,7 +42,8 @@ LOCAL_APPS = [
     'apps.payments',
     'apps.coupons',
     'apps.reviews',
-    'apps.notifications'
+    'apps.notifications',
+    'apps.analytics'
 ]
 
 # ─── Payment Currency ───────────────────────────────────────────────────────────────
@@ -218,3 +220,27 @@ PASSWORD_RESET_TIMEOUT = config(
     default=3600,
     cast=int,
 )
+
+
+
+
+
+ANALYTICS_DAILY_SNAPSHOT_HOUR = int(
+    os.getenv("ANALYTICS_DAILY_SNAPSHOT_HOUR", "0")
+)
+ANALYTICS_DAILY_SNAPSHOT_MINUTE = int(
+    os.getenv("ANALYTICS_DAILY_SNAPSHOT_MINUTE", "10")
+)
+
+CELERY_BEAT_SCHEDULE = {
+    **globals().get("CELERY_BEAT_SCHEDULE", {}),
+    "analytics-compute-previous-day-snapshot": {
+        "task": "apps.analytics.tasks.compute_previous_day_analytics_snapshot_task",
+        "schedule": crontab(
+            hour=ANALYTICS_DAILY_SNAPSHOT_HOUR,
+            minute=ANALYTICS_DAILY_SNAPSHOT_MINUTE,
+        ),
+        "args": (),
+        "kwargs": {},
+    },
+}

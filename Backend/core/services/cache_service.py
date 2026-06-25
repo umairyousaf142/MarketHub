@@ -22,39 +22,88 @@ logger = logging.getLogger(__name__)
 
 
 def cache_get(key, default=None):
-    return cache.get(key, default)
+    try:
+        return cache.get(key, default)
+    except Exception as exc:
+        logger.warning(
+            "Cache get failed.",
+            extra={
+                "cache_key": key,
+                "error": str(exc),
+            },
+        )
+        return default
 
 
 def cache_set(key, value, timeout):
-    cache.set(key, value, timeout=timeout)
+    try:
+        cache.set(key, value, timeout=timeout)
+    except Exception as exc:
+        logger.warning(
+            "Cache set failed.",
+            extra={
+                "cache_key": key,
+                "error": str(exc),
+            },
+        )
 
     return value
 
 
 def cache_get_or_set(key, producer, timeout):
-    cached_value = cache.get(key)
+    try:
+        cached_value = cache.get(key)
 
-    if cached_value is not None:
-        return cached_value
+        if cached_value is not None:
+            return cached_value
+    except Exception as exc:
+        logger.warning(
+            "Cache get failed.",
+            extra={
+                "cache_key": key,
+                "error": str(exc),
+            },
+        )
 
     value = producer()
-    cache.set(key, value, timeout=timeout)
+
+    try:
+        cache.set(key, value, timeout=timeout)
+    except Exception as exc:
+        logger.warning(
+            "Cache set failed.",
+            extra={
+                "cache_key": key,
+                "error": str(exc),
+            },
+        )
 
     return value
 
 
 def cache_delete(key):
-    deleted = cache.delete(key)
+    try:
+        deleted = cache.delete(key)
 
-    logger.debug(
-        "Cache key deleted.",
-        extra={
-            "cache_key": key,
-            "deleted": deleted,
-        },
-    )
+        logger.debug(
+            "Cache key deleted.",
+            extra={
+                "cache_key": key,
+                "deleted": deleted,
+            },
+        )
 
-    return deleted
+        return deleted
+    except Exception as exc:
+        logger.warning(
+            "Cache delete failed.",
+            extra={
+                "cache_key": key,
+                "error": str(exc),
+            },
+        )
+
+        return False
 
 
 def cache_delete_many(keys):
@@ -63,7 +112,18 @@ def cache_delete_many(keys):
     if not keys:
         return None
 
-    return cache.delete_many(keys)
+    try:
+        return cache.delete_many(keys)
+    except Exception as exc:
+        logger.warning(
+            "Cache delete many failed.",
+            extra={
+                "cache_keys": keys,
+                "error": str(exc),
+            },
+        )
+
+        return None
 
 
 def set_product_detail_cache(product_id, value):

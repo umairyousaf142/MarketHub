@@ -1,7 +1,13 @@
 docker run -d -p 6379:6379 --name markethub-redis redis:alpine
 docker ps
 python manage.py runserver
-celery -A backend worker --loglevel=info --pool=solo
+
+
+Development mein worker
+celery -A config worker -l info -P solo
+
+Celery Beat
+celery -A config beat -l info
 
 
 Test Commands.
@@ -10,4 +16,4 @@ pytest apps/accounts/tests -q
 pytest
 
 
-py.exe manage.py startapp notifications apps/notifications
+py.exe manage.py startapp analytics apps/analytics

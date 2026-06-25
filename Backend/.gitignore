@@ -21,6 +21,8 @@ logs/
 
 # Environment variables — NEVER commit these
 .env
+.env.*
+!.env.example
 MyNotes.txt
 schema.yml
 
