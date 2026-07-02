@@ -1,3 +1,18 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+    extend_schema_view,
+)
+
+PAYMENT_ID_PATH_PARAMETER = OpenApiParameter(
+    name="id",
+    type=OpenApiTypes.UUID,
+    location=OpenApiParameter.PATH,
+    description="Payment ID.",
+)
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from drf_spectacular.utils import (
@@ -102,6 +117,7 @@ def enqueue_order_paid_tasks_once(old_payment_status, payment):
     retrieve=extend_schema(
         tags=["Customer Payments"],
         summary="Retrieve my payment",
+        parameters=[PAYMENT_ID_PATH_PARAMETER],
     ),
 )
 class CustomerPaymentViewSet(

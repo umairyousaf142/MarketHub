@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from decimal import Decimal
 from pathlib import Path
 
@@ -313,7 +314,8 @@ class PublicProductListSerializer(serializers.ModelSerializer):
             "created_at",
         ]
 
-    def get_primary_image(self, obj):
+    @extend_schema_field(serializers.URLField(allow_null=True))
+    def get_primary_image(self, obj) -> str | None:
         image = obj.images.filter(is_primary=True).first()
 
         if not image:
@@ -341,6 +343,7 @@ class PublicProductDetailSerializer(PublicProductListSerializer):
             "variants",
         ]
 
+    @extend_schema_field(ProductVariantSerializer(many=True))
     def get_variants(self, obj):
         variants = obj.variants.filter(is_active=True)
         return ProductVariantSerializer(variants, many=True).data

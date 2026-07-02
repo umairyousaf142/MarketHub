@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError
 from rest_framework import serializers
@@ -67,13 +68,16 @@ class InventoryRecordReadSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_variant_id(self, obj):
+    @extend_schema_field(serializers.UUIDField(allow_null=True))
+    def get_variant_id(self, obj) -> str | None:
         return str(obj.variant_id) if obj.variant_id else None
 
-    def get_variant_name(self, obj):
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_variant_name(self, obj) -> str | None:
         return obj.variant.name if obj.variant_id else None
 
-    def get_variant_sku(self, obj):
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_variant_sku(self, obj) -> str | None:
         return obj.variant.sku if obj.variant_id else None
 
 
@@ -265,14 +269,17 @@ class StockMovementReadSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_variant_id(self, obj):
+    @extend_schema_field(serializers.UUIDField(allow_null=True))
+    def get_variant_id(self, obj) -> str | None:
         variant = obj.inventory_record.variant
         return str(variant.id) if variant else None
 
-    def get_variant_name(self, obj):
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_variant_name(self, obj) -> str | None:
         variant = obj.inventory_record.variant
         return variant.name if variant else None
 
-    def get_variant_sku(self, obj):
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_variant_sku(self, obj) -> str | None:
         variant = obj.inventory_record.variant
         return variant.sku if variant else None

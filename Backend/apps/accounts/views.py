@@ -1,8 +1,18 @@
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
+    OpenApiParameter,
     OpenApiResponse,
     extend_schema,
     extend_schema_view,
 )
+
+ADDRESS_ID_PATH_PARAMETER = OpenApiParameter(
+    name="id",
+    type=OpenApiTypes.UUID,
+    location=OpenApiParameter.PATH,
+    description="Address ID.",
+)
+
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -122,21 +132,25 @@ class MeView(generics.RetrieveAPIView):
         tags=["Addresses"],
         summary="Retrieve my address",
         description="Returns a single address owned by the authenticated user.",
+        parameters=[ADDRESS_ID_PATH_PARAMETER],
     ),
     update=extend_schema(
         tags=["Addresses"],
         summary="Update my address",
         description="Updates a single address owned by the authenticated user.",
+        parameters=[ADDRESS_ID_PATH_PARAMETER],
     ),
     partial_update=extend_schema(
         tags=["Addresses"],
         summary="Partially update my address",
         description="Partially updates a single address owned by the authenticated user.",
+        parameters=[ADDRESS_ID_PATH_PARAMETER],
     ),
     destroy=extend_schema(
         tags=["Addresses"],
         summary="Delete my address",
         description="Deletes a single address owned by the authenticated user.",
+        parameters=[ADDRESS_ID_PATH_PARAMETER],
     ),
 )
 class AddressViewSet(viewsets.ModelViewSet):

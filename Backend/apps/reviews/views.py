@@ -1,9 +1,18 @@
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter,
     OpenApiResponse,
     extend_schema,
     extend_schema_view,
 )
+
+REVIEW_ID_PATH_PARAMETER = OpenApiParameter(
+    name="id",
+    type=OpenApiTypes.UUID,
+    location=OpenApiParameter.PATH,
+    description="Review ID.",
+)
+
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -75,6 +84,7 @@ def filter_review_queryset(queryset, request):
     retrieve=extend_schema(
         tags=["Customer Reviews"],
         summary="Retrieve my review",
+        parameters=[REVIEW_ID_PATH_PARAMETER],
     ),
     create=extend_schema(
         tags=["Customer Reviews"],

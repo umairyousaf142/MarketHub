@@ -146,6 +146,29 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_SETTINGS": {
         "persistAuthorization": True,
     },
+    "ENUM_NAME_OVERRIDES": {
+    "VendorStatusEnum": [
+        ("PENDING", "Pending"),
+        ("APPROVED", "Approved"),
+        ("SUSPENDED", "Suspended"),
+        ("REJECTED", "Rejected"),
+    ],
+    "OrderStatusEnum": [
+        ("PENDING", "Pending"),
+        ("CONFIRMED", "Confirmed"),
+        ("PROCESSING", "Processing"),
+        ("SHIPPED", "Shipped"),
+        ("DELIVERED", "Delivered"),
+        ("CANCELLED", "Cancelled"),
+    ],
+    "ProductStatusEnum": [
+        ("DRAFT", "Draft"),
+        ("PENDING_REVIEW", "Pending Review"),
+        ("ACTIVE", "Active"),
+        ("REJECTED", "Rejected"),
+        ("ARCHIVED", "Archived"),
+    ],
+},
 }
 
 # ─── Redis ────────────────────────────────────────────────────────────────────

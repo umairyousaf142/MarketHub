@@ -1,7 +1,21 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.shortcuts import get_object_or_404
 
-from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+    extend_schema_view,
+)
+
+CART_ITEM_ID_PATH_PARAMETER = OpenApiParameter(
+    name="item_id",
+    type=OpenApiTypes.UUID,
+    location=OpenApiParameter.PATH,
+    description="Cart item ID.",
+)
+
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError as DRFValidationError
@@ -131,6 +145,7 @@ class CustomerCartViewSet(viewsets.ViewSet):
         },
         summary="Update or remove cart item",
         description="PATCH updates cart item quantity. DELETE removes cart item from active cart.",
+        parameters=[CART_ITEM_ID_PATH_PARAMETER],
     )
     @action(
         detail=False,

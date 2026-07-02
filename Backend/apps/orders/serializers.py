@@ -1,9 +1,8 @@
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.types import OpenApiTypes
 from decimal import Decimal
-
 from rest_framework import serializers
-
 from apps.orders.models import Order, OrderItem, VendorOrder
-
 
 class DetailResponseSerializer(serializers.Serializer):
     detail = serializers.CharField()
@@ -101,7 +100,8 @@ class OrderItemReadSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_variant_id(self, obj):
+    @extend_schema_field(OpenApiTypes.UUID)
+    def get_variant_id(self, obj) -> str | None:
         return str(obj.variant_id) if obj.variant_id else None
 
 
@@ -171,7 +171,8 @@ class OrderReadSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_source_cart_id(self, obj):
+    @extend_schema_field(serializers.UUIDField(allow_null=True))
+    def get_source_cart_id(self, obj) -> str | None:
         return str(obj.source_cart_id) if obj.source_cart_id else None
 
 
@@ -219,6 +220,7 @@ class VendorOrderReadSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
+    @extend_schema_field(OrderItemReadSerializer(many=True))
     def get_items(self, obj):
         items = obj.order.items.filter(vendor=obj.vendor).select_related(
             "order",

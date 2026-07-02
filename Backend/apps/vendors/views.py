@@ -2,11 +2,21 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
+    OpenApiParameter,
     OpenApiResponse,
     extend_schema,
     extend_schema_view,
 )
+
+VENDOR_DOCUMENT_ID_PATH_PARAMETER = OpenApiParameter(
+    name="id",
+    type=OpenApiTypes.UUID,
+    location=OpenApiParameter.PATH,
+    description="Vendor document ID.",
+)
+
 from rest_framework import generics, mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, ValidationError as DRFValidationError
@@ -155,16 +165,19 @@ class VendorMeView(generics.RetrieveUpdateAPIView):
         tags=["Vendor Documents"],
         summary="Retrieve my vendor document",
         description="Returns one document owned by the authenticated vendor.",
+        parameters=[VENDOR_DOCUMENT_ID_PATH_PARAMETER],
     ),
     partial_update=extend_schema(
         tags=["Vendor Documents"],
         summary="Update my vendor document",
         description="Updates document type or file for the authenticated vendor.",
+        parameters=[VENDOR_DOCUMENT_ID_PATH_PARAMETER],
     ),
     destroy=extend_schema(
         tags=["Vendor Documents"],
         summary="Delete my vendor document",
         description="Deletes a document owned by the authenticated vendor.",
+        parameters=[VENDOR_DOCUMENT_ID_PATH_PARAMETER],
     ),
 )
 class VendorDocumentViewSet(viewsets.ModelViewSet):
@@ -299,40 +312,6 @@ class AdminVendorViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@extend_schema_view(
-    list=extend_schema(
-        tags=["Admin Commission Plans"],
-        summary="List commission plans",
-        description="Admin-only endpoint to list commission plans.",
-    ),
-    create=extend_schema(
-        tags=["Admin Commission Plans"],
-        summary="Create commission plan",
-        description="Admin-only endpoint to create a commission plan.",
-    ),
-    retrieve=extend_schema(
-        tags=["Admin Commission Plans"],
-        summary="Retrieve commission plan",
-        description="Admin-only endpoint to retrieve one commission plan.",
-    ),
-    update=extend_schema(
-        tags=["Admin Commission Plans"],
-        summary="Update commission plan",
-        description="Admin-only endpoint to update a commission plan.",
-    ),
-    partial_update=extend_schema(
-        tags=["Admin Commission Plans"],
-        summary="Partially update commission plan",
-        description="Admin-only endpoint to partially update a commission plan.",
-    ),
-    destroy=extend_schema(
-        tags=["Admin Commission Plans"],
-        summary="Delete commission plan",
-        description="Admin-only endpoint to delete a commission plan.",
-    ),
-)
-
-
 
 @extend_schema_view(
     list=extend_schema(
@@ -399,6 +378,39 @@ class AdminVendorDocumentViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+
+@extend_schema_view(
+    list=extend_schema(
+        tags=["Admin Commission Plans"],
+        summary="List commission plans",
+        description="Admin-only endpoint to list commission plans.",
+    ),
+    create=extend_schema(
+        tags=["Admin Commission Plans"],
+        summary="Create commission plan",
+        description="Admin-only endpoint to create a commission plan.",
+    ),
+    retrieve=extend_schema(
+        tags=["Admin Commission Plans"],
+        summary="Retrieve commission plan",
+        description="Admin-only endpoint to retrieve one commission plan.",
+    ),
+    update=extend_schema(
+        tags=["Admin Commission Plans"],
+        summary="Update commission plan",
+        description="Admin-only endpoint to update a commission plan.",
+    ),
+    partial_update=extend_schema(
+        tags=["Admin Commission Plans"],
+        summary="Partially update commission plan",
+        description="Admin-only endpoint to partially update a commission plan.",
+    ),
+    destroy=extend_schema(
+        tags=["Admin Commission Plans"],
+        summary="Delete commission plan",
+        description="Admin-only endpoint to delete a commission plan.",
+    ),
+)
 
 class CommissionPlanViewSet(viewsets.ModelViewSet):
     serializer_class = CommissionPlanSerializer
